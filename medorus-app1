@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medorus | Analytics Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+    :root {
+        --primary: #2563EB; --primary-dark: #1E40AF; --accent: #F59E0B;
+        --bg: #F3F4F6; --card-bg: #ffffff; --text: #1F2937;
+        --text-light: #6B7280; --border: #E5E7EB; --success: #10B981;
+        --break: #8B5CF6; --chart-bar: #3B82F6; --streak: #FF6B6B;
+    }
+    body.dark-mode {
+        --bg: #111827; --card-bg: #1F2937; --text: #F9FAFB;
+        --text-light: #9CA3AF; --border: #374151; --chart-bar: #60A5FA;
+        --streak: #FF8787;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background-color: var(--bg); color: var(--text); padding-bottom: 80px; transition: 0.3s; overflow-x: hidden; }
+
+    header { background: var(--card-bg); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .logo { font-weight: 800; font-size: 1.4rem; color: var(--primary); }
+    .header-actions { display: flex; gap: 15px; }
+    .btn-icon { background: none; border: none; color: var(--text); font-size: 1.2rem; cursor: pointer; position: relative; }
+
+    /* تلميح الإنجازات */
+    .badge { position: absolute; top: -5px; right: -5px; background: var(--streak); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; }
+
+    .side-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; opacity: 0; visibility: hidden; transition: 0.3s; }
+    .side-panel.open { opacity: 1; visibility: visible; }
+    .panel-content { position: absolute; top: 0; left: 0; width: 85%; height: 100%; background: var(--card-bg); padding: 20px; transform: translateX(-100%); transition: 0.3s; overflow-y: auto; }
+    .side-panel.open .panel-content { transform: translateX(0); }
+    .close-panel { float: left; font-size: 1.5rem; cursor: pointer; color: var(--text-light); }
+
+    .level-card { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 20px; }
+    .level-badge { font-size: 3rem; margin-bottom: 10px; }
+    .progress-bar { background: rgba(255,255,255,0.3); height: 8px; border-radius: 4px; margin-top: 10px; overflow: hidden; }
+    .progress-fill { background: var(--accent); height: 100%; width: 0%; transition: width 0.5s; }
+
+    /* عداد الأيام المتتالية */
+    .streak-card { background: linear-gradient(135deg, var(--streak), #FF5252); color: white; padding: 15px; border-radius: 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .streak-count { font-size: 2rem; font-weight: 800; margin-left: 10px; }
+    .streak-fire { font-size: 2rem; animation: flame 1s ease infinite; }
+    @keyframes flame { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+    .section { display: none; padding: 20px; animation: fadeIn 0.3s; }
+    .section.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .card { background: var(--card-bg); border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid var(--border); }
+    h2 { font-size: 1.1rem; margin-bottom: 15px; color: var(--text); display: flex; align-items: center; gap: 10px; }
+    h2 i { color: var(--primary); }
+    
+    .timer-display { font-size: 4rem; font-weight: 800; text-align: center; margin: 20px 0; font-variant-numeric: tabular-nums; }
+    .timer-mode { text-align: center; margin-bottom: 10px; }
+    .mode-btn { padding: 8px 15px; border: 2px solid var(--border); background: var(--bg); border-radius: 20px; margin: 5px; cursor: pointer; color: var(--text); }
+    .mode-btn.active { border-color: var(--primary); background: var(--primary); color: white; }    .mode-btn.break { border-color: var(--break); }
+    .mode-btn.break.active { background: var(--break); }
+    .timer-controls { display: flex; justify-content: center; gap: 15px; }
+    .duration-selector { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+    .dur-btn { padding: 8px 16px; border: 1px solid var(--border); background: var(--card-bg); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600; }
+    .dur-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+    .btn { border: none; padding: 12px 25px; border-radius: 50px; font-weight: 700; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-break { background: var(--break); color: #fff; }
+    .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+    .btn:active { transform: scale(0.95); }
+
+    input, select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); color: var(--text); outline: none; margin-bottom: 10px; }
+    input[type="color"] { width: 60px; height: 40px; padding: 2px; border: none; cursor: pointer; }
+
+    .subject-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
+    .subject-tag { padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; color: white; display: flex; align-items: center; gap: 8px; }
+    .subject-tag .remove-sub { cursor: pointer; opacity: 0.8; }
+
+    .todo-item { background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-right: 4px solid var(--primary); }
+    .todo-item.completed { opacity: 0.6; text-decoration: line-through; border-right-color: var(--success); }
+    .task-info { flex: 1; cursor: pointer; }
+    .task-subject { padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; color: white; margin-left: 5px; display: inline-block; }
+
+    .chart-container { margin: 20px 0; display: flex; justify-content: space-around; align-items: flex-end; height: 150px; }
+    .chart-bar-wrapper { display: flex; flex-direction: column; align-items: center; width: 100%; }
+    .chart-bar { width: 30px; background: var(--chart-bar); border-radius: 4px 4px 0 0; position: relative; transition: height 0.3s; }
+    .chart-bar:hover { opacity: 0.8; }
+    .chart-label { text-align: center; font-size: 0.7rem; color: var(--text-light); margin-top: 5px; }
+    .chart-value { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: var(--primary); }
+
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .stat-card { background: var(--bg); padding: 15px; border-radius: 12px; text-align: center; border: 1px solid var(--border); }
+    .stat-val { font-size: 1.4rem; font-weight: 800; color: var(--primary); }
+    .stat-label { font-size: 0.75rem; color: var(--text-light); margin-top: 5px; }
+
+    .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+    .calendar-day-name { text-align: center; font-size: 0.75rem; color: var(--text-light); padding: 5px; }
+    .calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; border-radius: 8px; background: var(--bg); position: relative; cursor: pointer; }
+    .calendar-day.today { border: 2px solid var(--primary); font-weight: 700; }
+    .calendar-day.has-study::after { content: ''; position: absolute; bottom: 4px; width: 6px; height: 6px; background: var(--success); border-radius: 50%; }
+    .calendar-day.has-study.many::after { width: 12px; height: 12px; background: var(--accent); }
+    .calendar-day.streak-day { background: rgba(255, 107, 107, 0.2); border: 1px solid var(--streak); }
+
+    .insight-card { background: linear-gradient(135deg, #10B981, #059669); color: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+    .insight-card.warning { background: linear-gradient(135deg, #F59E0B, #D97706); }
+    .insight-card.streak { background: linear-gradient(135deg, #FF6B6B, #FF5252); }
+    .insight-title { font-size: 0.85rem; opacity: 0.9; margin-bottom: 5px; }
+    .insight-value { font-size: 1.1rem; font-weight: 700; }
+
+    .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--card-bg); display: flex; justify-content: space-around; padding: 12px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 90; border-top: 1px solid var(--border); }
+    .nav-item { text-align: center; color: var(--text-light); font-size: 0.7rem; cursor: pointer; }
+    .nav-item i { font-size: 1.4rem; margin-bottom: 4px; display: block; }
+    .nav-item.active { color: var(--primary); }
+
+    .add-subject-form { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
+    .add-subject-form input[type="text"] { flex: 1; margin-bottom: 0; }
+    .add-subject-form input[type="color"] { margin-bottom: 0; }
+
+    .notification { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 12px 24px; border-radius: 50px; z-index: 1000; animation: slideDown 0.3s; }
+    @keyframes slideDown { from { top: -100px; } to { top: 20px; } }
+
+    .subject-select { margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+<header>
+    <div class="logo">Medorus</div>
+    <div class="header-actions">
+        <button class="btn-icon" onclick="toggleSidePanel()"><i class="fas fa-chart-pie"></i></button>
+        <button class="btn-icon" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+    </div>
+</header>
+
+<div class="side-panel" id="sidePanel">
+    <div class="panel-content">
+        <span class="close-panel" onclick="toggleSidePanel()">&times;</span>
+        <h2 style="margin-top: 20px;">لوحة القائد</h2>
+        
+        <!-- عداد الأيام المتتالية -->
+        <div class="streak-card">
+            <div>
+                <span class="streak-count" id="streakCount">0</span>
+                <span>يوم متتالي</span>
+            </div>
+            <div class="streak-fire" id="streakFire">🔥</div>
+        </div>
+        
+        <div class="level-card">
+            <div class="level-badge" id="levelIcon">🎓</div>
+            <h3 id="levelName">طالب سنة 1</h3>
+            <p style="font-size: 0.9rem; opacity: 0.9;">النقاط: <span id="xpPoints">0</span></p>
+            <div class="progress-bar"><div class="progress-fill" id="xpBar"></div></div>
+        </div>
+        
+        <h3>إحصائيات سريعة</h3>
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-val" id="statDaily">0</div><div class="stat-label">اليوم</div></div>
+            <div class="stat-card"><div class="stat-val" id="statWeekly">0</div><div class="stat-label">هذا الأسبوع</div></div>
+            <div class="stat-card"><div class="stat-val" id="statMonthly">0</div><div class="stat-label">هذا الشهر</div></div>
+            <div class="stat-card"><div class="stat-val" id="totalSessions">0</div><div class="stat-label">إجمالي الجلسات</div></div>
+        </div>
+    </div>
+</div>
+
+<div id="home" class="section active">
+    <div class="card">
+        <h2><i class="fas fa-hourglass-half"></i> جلسة التركيز</h2>
+        <div class="timer-mode">
+            <button class="mode-btn active" onclick="setTimerMode('focus', this)"><i class="fas fa-brain"></i> دراسة</button>
+            <button class="mode-btn break" onclick="setTimerMode('break', this)"><i class="fas fa-coffee"></i> استراحة</button>
+        </div>
+        
+        <!-- إضافة اختيار المادة في صفحة المؤقت -->
+        <div class="subject-select">
+            <select id="timerSubjectSelect">
+                <option value="">اختر المادة...</option>
+            </select>
+        </div>
+        
+        <div class="duration-selector" id="durationSelector">
+            <button class="dur-btn active" onclick="setDuration(25, this)">25</button>
+            <button class="dur-btn" onclick="setDuration(45, this)">45</button>
+            <button class="dur-btn" onclick="setDuration(50, this)">50</button>
+        </div>
+        <div class="timer-display" id="timer">25:00</div>
+        <div class="timer-controls">
+            <button class="btn btn-primary" id="startBtn" onclick="toggleTimer()"><i class="fas fa-play"></i> ابدأ</button>
+            <button class="btn btn-secondary" id="pauseBtn" onclick="pauseTimer()" style="display:none;"><i class="fas fa-pause"></i> إيقاف</button>
+            <button class="btn btn-secondary" onclick="resetTimer()"><i class="fas fa-redo"></i> إعادة</button>
+        </div>
+    </div>
+    <div class="card" onclick="toggleSidePanel()" style="cursor: pointer;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="color: var(--primary);">مستواك الحالي</h3>
+                <p style="font-size: 0.9rem; color: var(--text-light);">اضغط للتفاصيل</p>
+            </div>
+            <i class="fas fa-chevron-left" style="color: var(--primary);"></i>
+        </div>
+    </div>
+</div>
+
+<div id="analytics" class="section">
+    <div class="card">
+        <h2><i class="fas fa-brain"></i> تحليل التركيز</h2>
+        
+        <!-- إضافة إنجاز الأيام المتتالية -->
+        <div class="insight-card streak" id="streakInsight" style="display: none;">
+            <div class="insight-title">🔥 إنجاز الأيام المتتالية</div>
+            <div class="insight-value" id="streakMessage"></div>
+        </div>
+        
+        <div class="insight-card">
+            <div class="insight-title">⏰ أفضل وقت للدراسة</div>
+            <div class="insight-value" id="bestTimeInsight">جاري التحليل...</div>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-val" id="avgSession">0</div>
+                <div class="stat-label">متوسط الجلسة (دقيقة)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" id="totalHours">0</div>
+                <div class="stat-label">إجمالي الساعات</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2><i class="fas fa-chart-bar"></i> تطور الأسبوع</h2>
+        <div class="chart-container" id="weeklyChart"></div>
+    </div>
+
+    <div class="card">
+        <h2><i class="fas fa-book"></i> تحليل المواد</h2>
+        <div id="subjectAnalysis"></div>
+    </div>
+
+    <div class="card">
+        <h2><i class="fas fa-calendar-alt"></i> تقويم الدراسة</h2>
+        <div class="calendar-header">
+            <button class="btn btn-secondary" onclick="changeMonth(-1)"><i class="fas fa-chevron-right"></i></button>
+            <span id="calendarMonth" style="font-weight: 700;"></span>
+            <button class="btn btn-secondary" onclick="changeMonth(1)"><i class="fas fa-chevron-left"></i></button>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+</div>
+
+<div id="subjects" class="section">
+    <div class="card">
+        <h2><i class="fas fa-book"></i> موادك الدراسية</h2>
+        <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 15px;">أضف موادك وحدد لوناً لكل منها</p>
+        <div class="add-subject-form">
+            <input type="text" id="newSubjectName" placeholder="اسم المادة">
+            <input type="color" id="newSubjectColor" value="#2563EB">
+            <button class="btn btn-primary" onclick="addSubject()"><i class="fas fa-plus"></i></button>
+        </div>
+        <div class="subject-tags" id="subjectTagsContainer"></div>
+    </div>
+</div>
+
+<div id="tasks" class="section">
+    <div class="card">
+        <h2><i class="fas fa-plus-circle"></i> مهمة جديدة</h2>
+        <input type="text" id="taskInput" placeholder="عنوان المهمة...">
+        <select id="taskSubjectSelect"><option value="">اختر المادة...</option></select>
+        <button class="btn btn-primary" style="width: 100%;" onclick="addTask()">إضافة (+10 نقاط)</button>
+    </div>
+    <div id="taskListContainer"></div>
+</div>
+
+<div id="notes" class="section">
+    <div class="card">
+        <h2><i class="fas fa-sticky-note"></i> ملاحظات</h2>
+        <textarea id="noteInput" rows="3" placeholder="اكتب ملاحظة..." style="width:100%; padding:12px; border:1px solid var(--border); border-radius:10px; background:var(--bg); color:var(--text); margin-bottom:10px;"></textarea>
+        <button class="btn btn-primary" style="width: 100%;" onclick="addNote()">حفظ</button>
+    </div>
+    <div id="notesListContainer"></div>
+</div>
+
+<div id="profile" class="section">
+    <div class="card">
+        <h2>الإعدادات</h2>
+        <button class="btn btn-secondary" style="width: 100%; margin-bottom: 10px;" onclick="toggleTheme()">الوضع الليلي 🌙</button>
+        <button class="btn btn-secondary" style="width: 100%; margin-bottom: 10px;" onclick="exportData()">تصدير البيانات 📤</button>
+        <button class="btn btn-secondary" style="width: 100%; margin-bottom: 10px;" onclick="importData()">استيراد البيانات 📥</button>
+        <button class="btn btn-secondary" style="width: 100%; background: #fee2e2; color: #dc2626; border: none;" onclick="clearAllData()">حذف البيانات</button>
+        <p style="text-align: center; margin-top: 20px; font-size: 0.8rem; color: var(--text-light);">Medorus v5.0 Analytics</p>
+    </div>
+</div>
+
+<nav class="bottom-nav">
+    <div class="nav-item active" onclick="switchTab('home', this)"><i class="fas fa-home"></i>الرئيسية</div>
+    <div class="nav-item" onclick="switchTab('analytics', this)"><i class="fas fa-chart-line"></i>تحليلات</div>
+    <div class="nav-item" onclick="switchTab('subjects', this)"><i class="fas fa-book"></i>المواد</div>
+    <div class="nav-item" onclick="switchTab('tasks', this)"><i class="fas fa-list-check"></i>المهام</div>
+    <div class="nav-item" onclick="switchTab('profile', this)"><i class="fas fa-user"></i>حسابي</div>
+</nav>
+
+<script>
+    // تهيئة المتغيرات
+    let xp = parseInt(localStorage.getItem('medorus_xp')) || 0;
+    let subjects = JSON.parse(localStorage.getItem('medorus_subjects')) || [];
+    let tasks = JSON.parse(localStorage.getItem('medorus_tasks')) || [];
+    let notes = JSON.parse(localStorage.getItem('medorus_notes')) || [];
+    let sessions = JSON.parse(localStorage.getItem('medorus_sessions')) || [];
+    let streak = parseInt(localStorage.getItem('medorus_streak')) || 0;
+    let lastStudyDate = localStorage.getItem('medorus_last_study_date') || null;
+    
+    let stats = JSON.parse(localStorage.getItem('medorus_stats')) || { 
+        daily: 0, 
+        weekly: 0, 
+        monthly: 0, 
+        lastUpdate: new Date().toISOString() 
+    };
+    
+    let timerInterval, timeLeft = 25 * 60, isRunning = false, timerMode = 'focus', currentDuration = 25;
+    let currentCalendarDate = new Date();
+
+    // التحقق من الثيم
+    if(localStorage.getItem('medorus_theme') === 'dark') document.body.classList.add('dark-mode');
+    
+    // التحقق من الإحصائيات والأيام المتتالية
+    checkStatsReset();
+    updateStreak();
+    
+    // تحديث الواجهة
+    updateLevelUI(); 
+    updateStatsUI(); 
+    renderSubjects(); 
+    updateSubjectSelect(); 
+    renderTasks(); 
+    renderNotes(); 
+    updateTimerDisplay(); 
+    updateAnalytics(); 
+    renderCalendar();
+
+    // دوال الإشعارات
+    function showNotification(message, type = 'success') {
+        const notification = document.createElement('div');
+        notification.className = 'notification';
+        notification.style.background = type === 'success' ? 'var(--primary)' : '#ef4444';
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 3000);
+    }
+
+    // دالة تحديث الأيام المتتالية
+    function updateStreak() {
+        const today = new Date().toDateString();
+        const streakElement = document.getElementById('streakCount');
+        const streakFire = document.getElementById('streakFire');
+        const streakInsight = document.getElementById('streakInsight');
+        const streakMessage = document.getElementById('streakMessage');
+        
+        if(streak > 0) {
+            streakElement.innerText = streak;
+            streakFire.style.animation = 'flame 1s ease infinite';
+            
+            // عرض إنجاز إذا كان streak 7 أيام أو أكثر
+            if(streak >= 7) {
+                streakInsight.style.display = 'block';
+                streakMessage.innerText = `🔥 ${streak} أيام متتالية! أحسنت!`;
+            } else {
+                streakInsight.style.display = 'none';
+            }
+            
+            // تغيير شكل النار حسب عدد الأيام
+            if(streak >= 30) streakFire.innerText = '🔥🔥🔥';
+            else if(streak >= 14) streakFire.innerText = '🔥🔥';
+            else if(streak >= 7) streakFire.innerText = '🔥';
+        } else {
+            streakElement.innerText = '0';
+            streakFire.style.animation = 'none';
+            streakInsight.style.display = 'none';
+        }
+        
+        localStorage.setItem('medorus_streak', streak);
+        localStorage.setItem('medorus_last_study_date', lastStudyDate);
+    }
+
+    // دالة التحقق من الأسبوع بدقة
+    function getWeekNumber(date) {
+        const d = new Date(date);
+        d.setHours(0, 0, 0, 0);
+        d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+        const yearStart = new Date(d.getFullYear(), 0, 1);
+        return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    }
+
+    // دوال التحقق من الإحصائيات
+    function checkStatsReset() {
+        const now = new Date();
+        const lastUpdate = stats.lastUpdate ? new Date(stats.lastUpdate) : now;
+        let needsUpdate = false;
+        
+        // إعادة تعيين اليومي
+        if(now.toDateString() !== lastUpdate.toDateString()) {
+            stats.daily = 0;
+            needsUpdate = true;
+        }
+        
+        // إعادة تعيين الأسبوعي (باستخدام رقم الأسبوع)
+        if(getWeekNumber(now) !== getWeekNumber(lastUpdate)) {
+            stats.weekly = 0;
+            needsUpdate = true;
+        }
+        
+        // إعادة تعيين الشهري
+        if(now.getMonth() !== lastUpdate.getMonth() || now.getFullYear() !== lastUpdate.getFullYear()) {
+            stats.monthly = 0;
+            needsUpdate = true;
+        }
+        
+        if(needsUpdate) {
+            stats.lastUpdate = now.toISOString();
+            saveStats();
+            updateStatsUI();
+        }
+    }
+
+    function switchTab(tabId, el) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        el.classList.add('active');
+        if(tabId === 'analytics') updateAnalytics();
+    }
+    
+    function toggleTheme() { 
+        document.body.classList.toggle('dark-mode'); 
+        localStorage.setItem('medorus_theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light'); 
+    }
+    
+    function toggleSidePanel() { 
+        document.getElementById('sidePanel').classList.toggle('open'); 
+        updateStreak(); // تحديث streak عند فتح اللوحة
+    }
+
+    function addXP(amount) { 
+        xp += amount; 
+        localStorage.setItem('medorus_xp', xp); 
+        updateLevelUI(); 
+    }
+    
+    function updateLevelUI() {
+        let level = "طالب سنة 1", icon = "🎓", nextLevel = 500, prevLevelXP = 0;
+        if (xp >= 2000) { level = "أستاذ محاضر"; icon = "👨‍🏫"; nextLevel = 3000; prevLevelXP = 2000; }
+        else if (xp >= 1000) { level = "طبيب مقيم"; icon = "🩺"; nextLevel = 2000; prevLevelXP = 1000; }
+        else if (xp >= 500) { level = "طبيب عام"; icon = "👨‍⚕️"; nextLevel = 1000; prevLevelXP = 500; }
+        else if (xp >= 200) { level = "طالب سنة 3"; icon = "📚"; nextLevel = 500; prevLevelXP = 200; }
+        document.getElementById('levelName').innerText = level;
+        document.getElementById('levelIcon').innerText = icon;
+        document.getElementById('xpPoints').innerText = xp;
+        let range = nextLevel - prevLevelXP;
+        let progress = ((xp - prevLevelXP) / range) * 100;
+        document.getElementById('xpBar').style.width = Math.min(progress, 100) + '%';
+    }
+
+    function setTimerMode(mode, btn) {
+        timerMode = mode;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const durationSelector = document.getElementById('durationSelector');
+        if(mode === 'break') { 
+            durationSelector.style.display = 'none'; 
+            timeLeft = 5 * 60; 
+        } else { 
+            durationSelector.style.display = 'flex'; 
+            timeLeft = currentDuration * 60; 
+        }
+        resetTimer(); 
+        updateTimerDisplay();
+    }
+    
+    function setDuration(mins, btn) { 
+        currentDuration = mins; 
+        if(timerMode === 'focus') {
+            timeLeft = mins * 60; 
+        }
+        document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('active')); 
+        btn.classList.add('active'); 
+        updateTimerDisplay(); 
+    }
+    
+    function updateTimerDisplay() {
+        const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+        const s = (timeLeft % 60).toString().padStart(2, '0');
+        document.getElementById('timer').innerText = m + ':' + s;
+        document.title = m + ':' + s + ' - Medorus';
+    }
+    
+    function toggleTimer() {
+        if (isRunning) return;
+        isRunning = true;
+        document.getElementById('startBtn').style.display = 'none';
+        document.getElementById('pauseBtn').style.display = 'inline-block';
+        timerInterval = setInterval(function() {
+            if (timeLeft > 0) { 
+                timeLeft--; 
+                updateTimerDisplay(); 
+            } else { 
+                completeTimerSession(); 
+            }
+        }, 1000);
+    }
+    
+    function pauseTimer() {
+        if (!isRunning) return;
+        clearInterval(timerInterval); 
+        isRunning = false;
+        document.getElementById('startBtn').innerHTML = '<i class="fas fa-play"></i> استئناف';
+        document.getElementById('startBtn').style.display = 'inline-block';
+        document.getElementById('pauseBtn').style.display = 'none';
+    }
+    
+    function resetTimer() {
+        clearInterval(timerInterval); 
+        isRunning = false;
+        timeLeft = (timerMode === 'break') ? 5 * 60 : currentDuration * 60;
+        updateTimerDisplay();
+        document.getElementById('startBtn').innerHTML = '<i class="fas fa-play"></i> ابدأ';
+        document.getElementById('startBtn').style.display = 'inline-block';
+        document.getElementById('pauseBtn').style.display = 'none';
+        document.title = 'Medorus';
+    }
+    
+    function completeTimerSession() {
+        resetTimer();
+        if(timerMode === 'focus') {
+            const selectedSubject = document.getElementById('timerSubjectSelect').value;
+            const sessionData = {
+                date: new Date().toISOString(),
+                duration: currentDuration,
+                hour: new Date().getHours(),
+                subject: selectedSubject || 'عام'
+            };
+            sessions.push(sessionData);
+            localStorage.setItem('medorus_sessions', JSON.stringify(sessions));
+            addXP(20); 
+            updateStats(1);
+            
+            // تحديث streak
+            const today = new Date().toDateString();
+            if(lastStudyDate !== today) {
+                if(lastStudyDate) {
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    if(lastStudyDate === yesterday.toDateString()) {
+                        streak++;
+                        if(streak === 7) {
+                            showNotification('🎉 إنجاز! 7 أيام متتالية! +100 نقطة', 'success');
+                            addXP(100);
+                        } else if(streak === 30) {
+                            showNotification('🌟 أسطوري! 30 يوم متتالي! +500 نقطة', 'success');
+                            addXP(500);
+                        }
+                    } else {
+                        streak = 1;
+                    }
+                } else {
+                    streak = 1;
+                }
+                lastStudyDate = today;
+                updateStreak();
+            }
+            
+            showNotification('🎉 أحسنت! أكملت جلسة دراسة. +20 نقطة', 'success');
+            updateAnalytics(); 
+            renderCalendar();
+            
+            // التبديل تلقائياً إلى وضع الاستراحة
+            setTimeout(() => {
+                const breakBtn = document.querySelector('.mode-btn.break');
+                if(breakBtn) {
+                    setTimerMode('break', breakBtn);
+                }
+            }, 1000);
+        } else { 
+            showNotification('☕ انتهت الاستراحة!', 'info');
+        }
+    }
+
+    function updateAnalytics() {
+        const hours = new Array(24).fill(0);
+        sessions.forEach(s => { 
+            if(s.hour >= 0 && s.hour < 24) hours[s.hour] += s.duration; 
+        });
+        let maxHour = 0, maxVal = 0;
+        for(let i = 0; i < 24; i++) {             
+            if(hours[i] > maxVal) { 
+                maxVal = hours[i]; 
+                maxHour = i; 
+            } 
+        }
+        let timeLabel = maxVal === 0 ? "لا توجد بيانات كافية" : (maxHour < 12 ? "🌅 الصباح (" + maxHour + ":00)" : (maxHour < 18 ? "☀️ الظهيرة (" + maxHour + ":00)" : "🌙 الليل (" + maxHour + ":00)"));
+        document.getElementById('bestTimeInsight').innerText = timeLabel;
+
+        const totalMins = sessions.reduce((sum, s) => sum + s.duration, 0);
+        const avg = sessions.length > 0 ? Math.round(totalMins / sessions.length) : 0;
+        document.getElementById('avgSession').innerText = avg;
+        document.getElementById('totalHours').innerText = (totalMins / 60).toFixed(1);
+        document.getElementById('totalSessions').innerText = sessions.length;
+
+        renderWeeklyChart();
+        renderSubjectAnalysis();
+    }
+
+    function renderWeeklyChart() {
+        const container = document.getElementById('weeklyChart');
+        container.innerHTML = '';
+        const days = ['أحد', 'إثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
+        const weekData = [0, 0, 0, 0, 0, 0, 0];
+        const now = new Date();
+        
+        sessions.forEach(s => {
+            const sessionDate = new Date(s.date);
+            const diffDays = Math.floor((now - sessionDate) / (1000 * 60 * 60 * 24));
+            if(diffDays >= 0 && diffDays < 7) {
+                const dayIndex = sessionDate.getDay();
+                weekData[dayIndex] += s.duration;
+            }
+        });
+
+        const maxVal = Math.max(...weekData, 1);
+        
+        days.forEach((day, idx) => {
+            // تصحيح: استخدام نسبة مئوية بدلاً من px
+            const heightPercent = (weekData[idx] / maxVal) * 100;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'chart-bar-wrapper';
+            wrapper.innerHTML = `
+                <div class="chart-bar" style="height: ${heightPercent}%;">
+                    <span class="chart-value">${weekData[idx]}</span>
+                </div>
+                <div class="chart-label">${day}</div>
+            `;
+            container.appendChild(wrapper);
+        });
+    }
+
+    function renderSubjectAnalysis() {
+        const container = document.getElementById('subjectAnalysis');
+        container.innerHTML = '';        
+        const subjectStats = {};
+        sessions.forEach(s => {
+            const sub = s.subject || 'عام';
+            if(!subjectStats[sub]) subjectStats[sub] = 0;
+            subjectStats[sub] += s.duration;
+        });
+
+        const sorted = Object.entries(subjectStats).sort((a,b) => b[1] - a[1]);
+        if(sorted.length === 0) { 
+            container.innerHTML = '<p style="color:var(--text-light);text-align:center">لا توجد بيانات بعد</p>'; 
+            return; 
+        }
+
+        const top = sorted[0];
+        container.innerHTML += '<div class="insight-card"><div class="insight-title">🏆 الأكثر دراسة</div><div class="insight-value">' + top[0] + ' (' + top[1] + ' دقيقة)</div></div>';
+
+        if(subjects.length > 0) {
+            const studiedSubjects = sorted.map(s => s[0]);
+            const neglected = subjects.find(sub => !studiedSubjects.includes(sub.name));
+            if(neglected) {
+                container.innerHTML += '<div class="insight-card warning"><div class="insight-title">⚠️ تحتاج اهتمام</div><div class="insight-value">' + neglected.name + '</div></div>';
+            }
+        }
+    }
+
+    function renderCalendar() {
+        const grid = document.getElementById('calendarGrid');
+        const monthLabel = document.getElementById('calendarMonth');
+        grid.innerHTML = '';
+
+        const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+        const dayNames = ['أحد', 'إثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
+
+        monthLabel.innerText = monthNames[currentCalendarDate.getMonth()] + ' ' + currentCalendarDate.getFullYear();
+
+        dayNames.forEach(d => {
+            const el = document.createElement('div');
+            el.className = 'calendar-day-name';
+            el.innerText = d;
+            grid.appendChild(el);
+        });
+
+        const firstDay = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), 1).getDay();
+        const daysInMonth = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() + 1, 0).getDate();
+        const today = new Date();
+
+        for(let i = 0; i < firstDay; i++) { 
+            grid.appendChild(document.createElement('div')); 
+        }
+
+        // تجميع أيام الدراسة المتتالية
+        let studyDays = [];
+        sessions.forEach(s => {
+            const sDate = new Date(s.date);
+            const dateStr = sDate.toDateString();
+            if(!studyDays.includes(dateStr)) {
+                studyDays.push(dateStr);
+            }
+        });
+
+        for(let day = 1; day <= daysInMonth; day++) {
+            const cell = document.createElement('div');
+            cell.className = 'calendar-day';
+            cell.innerText = day;
+
+            const currentDate = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), day);
+            const dateStr = currentDate.toDateString();
+
+            if(today.toDateString() === dateStr) {
+                cell.classList.add('today');
+            }
+
+            // التحقق من وجود جلسات في هذا اليوم
+            const daySessions = sessions.filter(s => {
+                const sDate = new Date(s.date);
+                return sDate.toDateString() === dateStr;
+            });
+            
+            if(daySessions.length > 0) {
+                cell.classList.add('has-study');
+                if(daySessions.length >= 3) cell.classList.add('many');
+            }
+            
+            // تمييز أيام الدراسة المتتالية في التقويم
+            if(studyDays.includes(dateStr)) {
+                // التحقق من الاستمرارية
+                const prevDay = new Date(currentDate);
+                prevDay.setDate(prevDay.getDate() - 1);
+                const nextDay = new Date(currentDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                
+                if(studyDays.includes(prevDay.toDateString()) && studyDays.includes(nextDay.toDateString())) {
+                    cell.classList.add('streak-day');
+                }
+            }
+
+            grid.appendChild(cell);
+        }
+    }
+
+    function changeMonth(dir) {
+        currentCalendarDate.setMonth(currentCalendarDate.getMonth() + dir);
+        renderCalendar();
+    }
+
+    function renderSubjects() {
+        const container = document.getElementById('subjectTagsContainer');
+        container.innerHTML = '';
+        subjects.forEach(function(sub, index) {
+            const tag = document.createElement('div');
+            tag.className = 'subject-tag';
+            tag.style.backgroundColor = sub.color;
+            tag.innerHTML = sub.name + ' <span class="remove-sub" onclick="removeSubject(' + index + ')"><i class="fas fa-times"></i></span>';
+            container.appendChild(tag);
+        });
+        updateSubjectSelect();
+    }
+    
+    function addSubject() {
+        const name = document.getElementById('newSubjectName').value.trim();
+        const color = document.getElementById('newSubjectColor').value;
+        if (name) {
+            subjects.push({ name: name, color: color });
+            localStorage.setItem('medorus_subjects', JSON.stringify(subjects));
+            document.getElementById('newSubjectName').value = '';
+            renderSubjects();
+            showNotification('تم إضافة المادة بنجاح', 'success');
+        } else {
+            showNotification('الرجاء إدخال اسم المادة', 'error');
+        }
+    }
+    
+    function removeSubject(index) { 
+        subjects.splice(index, 1); 
+        localStorage.setItem('medorus_subjects', JSON.stringify(subjects)); 
+        renderSubjects();
+        showNotification('تم حذف المادة', 'success');
+    }
+    
+    function updateSubjectSelect() {
+        // تحديث اختيار المادة في صفحة المهام
+        const taskSelect = document.getElementById('taskSubjectSelect');
+        taskSelect.innerHTML = '<option value="">اختر المادة...</option>';
+        
+        // تحديث اختيار المادة في صفحة المؤقت
+        const timerSelect = document.getElementById('timerSubjectSelect');
+        if(timerSelect) {
+            timerSelect.innerHTML = '<option value="">اختر المادة...</option>';
+        }
+        
+        subjects.forEach(function(sub) {
+            // للمهام
+            const taskOpt = document.createElement('option');
+            taskOpt.value = sub.name; 
+            taskOpt.text = sub.name; 
+            taskOpt.setAttribute('data-color', sub.color);
+            taskSelect.appendChild(taskOpt);
+            
+            // للمؤقت
+            if(timerSelect) {
+                const timerOpt = document.createElement('option');
+                timerOpt.value = sub.name; 
+                timerOpt.text = sub.name; 
+                timerOpt.setAttribute('data-color', sub.color);
+                timerSelect.appendChild(timerOpt);
+            }
+        });
+    }
+
+    function renderTasks() {
+        const container = document.getElementById('taskListContainer');
+        container.innerHTML = '';
+        tasks.forEach(function(task, index) {
+            const div = document.createElement('div');
+            div.className = 'todo-item ' + (task.completed ? 'completed' : '');
+            let subjectColor = '#2563EB';
+            subjects.forEach(function(sub) { 
+                if(sub.name === task.subject) subjectColor = sub.color; 
+            });
+            div.innerHTML = '<div class="task-info" onclick="toggleTask(' + index + ')">' +
+                (task.subject ? '<span class="task-subject" style="background:' + subjectColor + '">' + task.subject + '</span>' : '') +
+                '<span>' + task.text + '</span></div>' +
+                '<button class="btn-icon" onclick="deleteTask(' + index + ')" style="color:#ef4444"><i class="fas fa-trash"></i></button>';
+            container.appendChild(div);
+        });
+        localStorage.setItem('medorus_tasks', JSON.stringify(tasks));
+    }
+    
+    function addTask() {
+        const text = document.getElementById('taskInput').value.trim();
+        const subject = document.getElementById('taskSubjectSelect').value;
+        if (text) { 
+            tasks.unshift({ text: text, subject: subject, completed: false }); 
+            document.getElementById('taskInput').value = ''; 
+            renderTasks(); 
+            addXP(10);
+            updateStats(1);
+            showNotification('تم إضافة المهمة بنجاح +10 نقاط', 'success');
+        } else {
+            showNotification('الرجاء إدخال نص المهمة', 'error');
+        }
+    }
+    
+    function toggleTask(index) {
+        if(tasks[index].completed === false) {
+            tasks[index].completed = true;
+            addXP(15); 
+            updateStats(1);
+            showNotification('أحسنت! +15 نقطة', 'success');
+        } else {
+            tasks[index].completed = false;
+        }
+        renderTasks();
+    }
+    
+    function deleteTask(index) { 
+        tasks.splice(index, 1); 
+        renderTasks();
+        showNotification('تم حذف المهمة', 'success');
+    }
+
+    function updateStats(count) { 
+        checkStatsReset();
+        stats.daily = (stats.daily || 0) + count; 
+        stats.weekly = (stats.weekly || 0) + count; 
+        stats.monthly = (stats.monthly || 0) + count; 
+        stats.lastUpdate = new Date().toISOString();
+        saveStats(); 
+        updateStatsUI(); 
+    }
+    
+    function saveStats() { 
+        localStorage.setItem('medorus_stats', JSON.stringify(stats)); 
+    }
+    
+    function updateStatsUI() {
+        document.getElementById('statDaily').innerText = stats.daily || 0;
+        document.getElementById('statWeekly').innerText = stats.weekly || 0;
+        document.getElementById('statMonthly').innerText = stats.monthly || 0;
+    }
+    
+    function renderNotes() {
+        const container = document.getElementById('notesListContainer');
+        container.innerHTML = '';
+        notes.forEach(function(note) {
+            const div = document.createElement('div');
+            div.className = 'card'; 
+            div.style.borderRight = '4px solid var(--accent)';
+            div.innerHTML = '<p>' + note.text + '</p><small style="color:var(--text-light)">' + note.date + '</small>';
+            container.appendChild(div);
+        });
+        localStorage.setItem('medorus_notes', JSON.stringify(notes));
+    }
+    
+    function addNote() {        
+        const text = document.getElementById('noteInput').value.trim();
+        if(text) { 
+            notes.unshift({ text: text, date: new Date().toLocaleDateString('ar-DZ') }); 
+            document.getElementById('noteInput').value = ''; 
+            renderNotes();
+            showNotification('تم حفظ الملاحظة', 'success');
+        }
+    }
+    
+    function exportData() {
+        const data = {
+            xp: xp,
+            subjects: subjects,
+            tasks: tasks,
+            notes: notes,
+            sessions: sessions,
+            stats: stats,
+            streak: streak,
+            lastStudyDate: lastStudyDate
+        };
+        const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'medorus-backup.json';
+        a.click();
+        showNotification('تم تصدير البيانات بنجاح', 'success');
+    }
+    
+    function importData() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = function(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    xp = data.xp || 0;
+                    subjects = data.subjects || [];
+                    tasks = data.tasks || [];
+                    notes = data.notes || [];
+                    sessions = data.sessions || [];
+                    stats = data.stats || { daily: 0, weekly: 0, monthly: 0, lastUpdate: new Date().toISOString() };
+                    streak = data.streak || 0;
+                    lastStudyDate = data.lastStudyDate || null;
+                    
+                    localStorage.setItem('medorus_xp', xp);
+                    localStorage.setItem('medorus_subjects', JSON.stringify(subjects));
+                    localStorage.setItem('medorus_tasks', JSON.stringify(tasks));
+                    localStorage.setItem('medorus_notes', JSON.stringify(notes));
+                    localStorage.setItem('medorus_sessions', JSON.stringify(sessions));
+                    localStorage.setItem('medorus_stats', JSON.stringify(stats));
+                    localStorage.setItem('medorus_streak', streak);
+                    localStorage.setItem('medorus_last_study_date', lastStudyDate);
+                    
+                    updateLevelUI();
+                    updateStatsUI();
+                    renderSubjects();
+                    updateSubjectSelect();
+                    renderTasks();
+                    renderNotes();
+                    updateAnalytics();
+                    renderCalendar();
+                    updateStreak();
+                    
+                    showNotification('تم استيراد البيانات بنجاح', 'success');
+                } catch(error) {
+                    showNotification('خطأ في قراءة الملف', 'error');
+                }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+    }
+    
+    function clearAllData() { 
+        if(confirm('تحذير: سيتم حذف كل تقدمك! هل أنت متأكد؟')) { 
+            localStorage.clear();
+            // إعادة تهيئة البيانات
+            xp = 0;
+            subjects = [];
+            tasks = [];
+            notes = [];
+            sessions = [];
+            streak = 0;
+            lastStudyDate = null;
+            stats = { daily: 0, weekly: 0, monthly: 0, lastUpdate: new Date().toISOString() };
+            timeLeft = 25 * 60;
+            currentDuration = 25;
+            timerMode = 'focus';
+            
+            updateLevelUI();
+            updateStatsUI();
+            renderSubjects();
+            updateSubjectSelect();
+            renderTasks();
+            renderNotes();
+            updateTimerDisplay();
+            updateAnalytics();
+            renderCalendar();
+            updateStreak();
+            
+            showNotification('تم حذف جميع البيانات', 'success');
+        } 
+    }
+</script>
+</body>
+</html>
